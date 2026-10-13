@@ -17,6 +17,7 @@
       <input id="email" type="email" placeholder="Email" required autocomplete="username">
       <input id="pass" type="password" placeholder="Mật khẩu" required autocomplete="current-password">
       <button class="primary" type="submit">Đăng nhập</button>
+      <button class="link" type="button" id="signup">Chưa có tài khoản? Đăng ký để nghe nhạc</button>
     </form>
   </section>
 
@@ -35,7 +36,7 @@
       <div class="vol">🔈<input type="range" id="vol" min="0" max="100" value="80"></div>
     </div>
 
-    <label class="add">＋ Thêm bài hát (mp3, m4a, wav... tối đa 50MB/file)
+    <label class="add" id="addBox">＋ Thêm bài hát (mp3, m4a, wav... tối đa 50MB/file)
       <input type="file" id="file" accept="audio/*" multiple hidden>
     </label>
 

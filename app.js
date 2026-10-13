@@ -6,7 +6,7 @@ const SUPABASE_URL = 'https://qkzeyhvfokiyxoyjeqij.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_LedPdzZbijxM2LuXpfTw9w_KFBh1Qvj';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let user = null, songs = [], idx = -1, shuffle = false, repeat = false;
+let user = null, isAdmin = false, songs = [], idx = -1, shuffle = false, repeat = false;
 const audio = new Audio();
 audio.volume = 0.8;
 
@@ -29,14 +29,26 @@ $('loginForm').onsubmit = async e => {
   user = data.user; $('pass').value = ''; say('');
   await enterApp();
 };
+$('signup').onclick = async () => {
+  const email = $('email').value.trim(), password = $('pass').value;
+  if (!email || password.length < 6) return say('Nhập email và mật khẩu (tối thiểu 6 ký tự) rồi bấm Đăng ký');
+  say('Đang đăng ký...');
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) return say('Lỗi đăng ký: ' + error.message);
+  if (data.session) { user = data.user; $('pass').value = ''; say(''); return enterApp(); }
+  say('Đã đăng ký. Kiểm tra email để xác nhận rồi quay lại đăng nhập.');
+};
 $('logout').onclick = async () => {
   audio.pause(); audio.removeAttribute('src');
   await sb.auth.signOut();
-  user = null; songs = []; idx = -1; show('login');
+  user = null; isAdmin = false; songs = []; idx = -1; show('login');
 };
 
 /* ---------- Danh sách bài ---------- */
 async function enterApp() {
+  const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+  isAdmin = !!data;
+  $('addBox').hidden = !isAdmin;
   show('app');
   await loadSongs();
 }
@@ -51,11 +63,11 @@ function render() {
   songs.forEach((s, i) => {
     const li = document.createElement('li');
     if (i === idx) li.className = 'cur';
-    li.innerHTML = '<span class="n"></span><span class="t"></span><button title="Xóa">✕</button>';
+    li.innerHTML = '<span class="n"></span><span class="t"></span>' + (isAdmin ? '<button title="Xóa">✕</button>' : '');
     li.children[0].textContent = i + 1;
     li.children[1].textContent = s.title;
     li.onclick = () => play(i);
-    li.children[2].onclick = e => { e.stopPropagation(); removeSong(i); };
+    if (isAdmin) li.children[2].onclick = e => { e.stopPropagation(); removeSong(i); };
     ul.appendChild(li);
   });
   $('now').textContent = idx >= 0 && songs[idx] ? songs[idx].title : 'Chưa chọn bài';
@@ -64,28 +76,31 @@ function render() {
 
 /* ---------- Thêm bài ---------- */
 $('file').onchange = async e => {
+  if (!isAdmin) return;
   const files = [...e.target.files];
+  const errors = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     say(`Đang tải ${i + 1}/${files.length}: ${f.name}`);
     const ext = (f.name.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, '');
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const up = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || 'audio/mpeg' });
-    if (up.error) { say('Lỗi tải lên: ' + up.error.message); continue; }
+    if (up.error) { errors.push('Tải lên: ' + up.error.message); continue; }
     const title = f.name.replace(/\.[^.]+$/, '');
     const ins = await sb.from('songs').insert({ title, file_path: path });
-    if (ins.error) { say('Lỗi lưu DB: ' + ins.error.message); await sb.storage.from(BUCKET).remove([path]); }
+    if (ins.error) { errors.push('Lưu DB: ' + ins.error.message); await sb.storage.from(BUCKET).remove([path]); }
   }
   e.target.value = '';
-  say('');
   const curId = idx >= 0 ? songs[idx]?.id : null;
   await loadSongs();
   if (curId) idx = songs.findIndex(s => s.id === curId);
   render();
+  say(errors.length ? '❌ ' + errors[0] : '✅ Đã tải xong');
 };
 
 /* ---------- Xóa bài ---------- */
 async function removeSong(i) {
+  if (!isAdmin) return;
   const s = songs[i];
   if (!confirm(`Xóa "${s.title}"?`)) return;
   await sb.storage.from(BUCKET).remove([s.file_path]);
