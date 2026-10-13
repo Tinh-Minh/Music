@@ -5,14 +5,16 @@
 body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
 main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
 h1{font-size:22px;margin:0 0 16px}
+.who{font-size:13px;color:var(--muted);margin:-8px 0 12px;word-break:break-all}
 .sub{color:var(--muted);font-size:14px;margin:0 0 12px}
 form{display:flex;flex-direction:column;gap:10px}
 input[type=text],input[type=email],input[type=url],input[type=password]{font:inherit;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
 input[type=range]{flex:1;accent-color:var(--accent)}
 button{font:inherit;border:0;background:transparent;color:var(--fg);cursor:pointer}
 button.primary{background:var(--accent);color:#fff;padding:12px;border-radius:10px;font-weight:600}
-button.secondary{border:1px solid var(--accent);color:var(--accent);padding:12px;border-radius:10px;font-weight:600}
-button.secondary:hover{background:var(--line)}
+.secondary{border:1px solid var(--accent);color:var(--accent);padding:12px;border-radius:10px;font-weight:600;text-align:center;text-decoration:none;display:block;background:transparent;font:inherit;font-weight:600}
+a.link{display:block;text-align:center;color:var(--muted);font-size:13px;text-decoration:underline;margin-top:14px}
+.secondary:hover{background:var(--line)}
 button.link{color:var(--muted);font-size:13px;text-decoration:underline;margin-top:14px;display:block;margin-inline:auto}
 .player{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;position:sticky;top:env(safe-area-inset-top,0);z-index:2}
 .now{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:22px}

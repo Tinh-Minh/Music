@@ -29,15 +29,6 @@ $('loginForm').onsubmit = async e => {
   user = data.user; $('pass').value = ''; say('');
   await enterApp();
 };
-$('signup').onclick = async () => {
-  const email = $('email').value.trim(), password = $('pass').value;
-  if (!email || password.length < 6) return say('Nhập email và mật khẩu (tối thiểu 6 ký tự) rồi bấm Đăng ký');
-  say('Đang đăng ký...');
-  const { data, error } = await sb.auth.signUp({ email, password });
-  if (error) return say('Lỗi đăng ký: ' + error.message);
-  if (data.session) { user = data.user; $('pass').value = ''; say(''); return enterApp(); }
-  say('Đã đăng ký. Kiểm tra email để xác nhận rồi quay lại đăng nhập.');
-};
 $('logout').onclick = async () => {
   audio.pause(); audio.removeAttribute('src');
   await sb.auth.signOut();
@@ -49,6 +40,7 @@ async function enterApp() {
   const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
   isAdmin = !!data;
   $('addBox').hidden = !isAdmin;
+  $('who').textContent = '👤 ' + user.email + (isAdmin ? ' · Admin' : ' · Người nghe');
   show('app');
   await loadSongs();
 }

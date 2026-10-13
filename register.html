@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Đăng ký - Nhạc của tôi</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>🎧 Đăng ký tài khoản</h1>
+  <p class="sub">Tài khoản mới chỉ được nghe nhạc, không thêm hay xóa bài.</p>
+
+  <form id="regForm">
+    <input id="email" type="email" placeholder="Email" required autocomplete="email">
+    <input id="pass" type="password" placeholder="Mật khẩu (tối thiểu 6 ký tự)" required minlength="6" autocomplete="new-password">
+    <input id="pass2" type="password" placeholder="Nhập lại mật khẩu" required minlength="6" autocomplete="new-password">
+    <button class="primary" type="submit" id="btn">Đăng ký</button>
+  </form>
+  <a class="link" href="index.html">Đã có tài khoản? Đăng nhập</a>
+
+  <div id="msg" role="status"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="register.js"></script>
+</body>
+</html>
