@@ -1,35 +1,24 @@
 const $ = id => document.getElementById(id);
-const CFG_KEY = 'sb_cfg';
 const BUCKET = 'music';
 
-let sb = null, user = null, songs = [], idx = -1, shuffle = false, repeat = false;
+/* Publishable key được thiết kế để công khai. Bảo mật nằm ở RLS + đăng nhập. */
+const SUPABASE_URL = 'https://qkzeyhvfokiyxoyjeqij.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LedPdzZbijxM2LuXpfTw9w_KFBh1Qvj';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let user = null, songs = [], idx = -1, shuffle = false, repeat = false;
 const audio = new Audio();
 audio.volume = 0.8;
 
 const say = t => { $('msg').textContent = t || ''; };
-const show = name => ['setup', 'login', 'app'].forEach(n => $(n).hidden = n !== name);
+const show = name => ['login', 'app'].forEach(n => $(n).hidden = n !== name);
 const fmt = t => isFinite(t) ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : '0:00';
-const getCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)); } catch { return null; } };
 
-/* ---------- Khởi động ---------- */
+/* ---------- Khởi động (không tự phát nhạc) ---------- */
 async function init() {
-  const c = getCfg();
-  if (!c) return show('setup');
-  sb = supabase.createClient(c.url, c.key);
   const { data: { session } } = await sb.auth.getSession();
   if (session) { user = session.user; await enterApp(); } else show('login');
 }
-
-/* ---------- Cấu hình (không nằm trong code/git) ---------- */
-$('setupForm').onsubmit = e => {
-  e.preventDefault();
-  const url = $('url').value.trim().replace(/\/+$/, '');
-  const key = $('key').value.trim();
-  if (!url.startsWith('https://')) return say('Project URL phải bắt đầu bằng https://');
-  localStorage.setItem(CFG_KEY, JSON.stringify({ url, key }));
-  say(''); init();
-};
-$('resetCfg').onclick = () => { localStorage.removeItem(CFG_KEY); sb = null; show('setup'); };
 
 /* ---------- Đăng nhập / đăng xuất ---------- */
 $('loginForm').onsubmit = async e => {
@@ -142,5 +131,19 @@ audio.onended = () => {
   if (n >= songs.length && !repeat) { idx = -1; audio.removeAttribute('src'); return render(); }
   play(n);
 };
+
+/* ---------- Phát nền: phím media, thông báo, màn hình khóa ---------- */
+if ('mediaSession' in navigator) {
+  const ms = navigator.mediaSession;
+  ms.setActionHandler('play', () => audio.play());
+  ms.setActionHandler('pause', () => audio.pause());
+  ms.setActionHandler('previoustrack', () => play(idx - 1));
+  ms.setActionHandler('nexttrack', () => play(nextIdx()));
+  ms.setActionHandler('seekto', d => { audio.currentTime = d.seekTime; });
+}
+audio.addEventListener('play', () => {
+  if (!('mediaSession' in navigator) || idx < 0 || !songs[idx]) return;
+  navigator.mediaSession.metadata = new MediaMetadata({ title: songs[idx].title, artist: 'Nhạc của tôi' });
+});
 
 init();

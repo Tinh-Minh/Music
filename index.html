@@ -11,27 +11,16 @@
 <main>
   <h1>🎧 Nhạc của tôi</h1>
 
-  <!-- Bước 1: nhập cấu hình Supabase (chỉ lần đầu trên mỗi thiết bị) -->
-  <section id="setup" hidden>
-    <p class="sub">Nhập thông tin Supabase. Chỉ lưu trong trình duyệt này, không nằm trong code.</p>
-    <form id="setupForm">
-      <input id="url" type="url" placeholder="Project URL (https://xxxx.supabase.co)" required autocomplete="off">
-      <input id="key" type="password" placeholder="anon / publishable key" required autocomplete="off">
-      <button class="primary" type="submit">Lưu</button>
-    </form>
-  </section>
-
-  <!-- Bước 2: đăng nhập -->
+  <!-- Đăng nhập -->
   <section id="login" hidden>
     <form id="loginForm">
       <input id="email" type="email" placeholder="Email" required autocomplete="username">
       <input id="pass" type="password" placeholder="Mật khẩu" required autocomplete="current-password">
       <button class="primary" type="submit">Đăng nhập</button>
     </form>
-    <button class="link" id="resetCfg">Đổi cấu hình Supabase</button>
   </section>
 
-  <!-- Bước 3: app -->
+  <!-- App -->
   <section id="app" hidden>
     <div class="player">
       <div class="now" id="now">Chưa chọn bài</div>
