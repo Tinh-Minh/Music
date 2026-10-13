@@ -1,5 +1,7 @@
 const $ = id => document.getElementById(id);
 const BUCKET = 'music';
+const ICON_PLAY = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 
 /* Publishable key được thiết kế để công khai. Bảo mật nằm ở RLS + đăng nhập. */
 const SUPABASE_URL = 'https://qkzeyhvfokiyxoyjeqij.supabase.co';
@@ -63,7 +65,7 @@ function render() {
     ul.appendChild(li);
   });
   $('now').textContent = idx >= 0 && songs[idx] ? songs[idx].title : 'Chưa chọn bài';
-  $('pp').textContent = audio.paused ? '▶' : '⏸';
+  $('pp').innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE;
 }
 
 /* ---------- Thêm bài ---------- */
@@ -124,15 +126,15 @@ $('next').onclick = () => play(nextIdx());
 $('prev').onclick = () => { audio.currentTime > 3 ? audio.currentTime = 0 : play(idx - 1); };
 $('shuf').onclick = () => { shuffle = !shuffle; $('shuf').classList.toggle('on', shuffle); };
 $('rep').onclick = () => { repeat = !repeat; $('rep').classList.toggle('on', repeat); };
-$('vol').oninput = e => audio.volume = e.target.value / 100;
-$('seek').oninput = e => { if (audio.duration) audio.currentTime = e.target.value / 1000 * audio.duration; };
+$('vol').oninput = e => { audio.volume = e.target.value / 100; e.target.style.setProperty('--p', e.target.value + '%'); };
+$('seek').oninput = e => { e.target.style.setProperty('--p', (e.target.value / 10) + '%'); if (audio.duration) audio.currentTime = e.target.value / 1000 * audio.duration; };
 
 audio.ontimeupdate = () => {
   $('cur').textContent = fmt(audio.currentTime);
   $('dur').textContent = fmt(audio.duration);
-  if (audio.duration) $('seek').value = audio.currentTime / audio.duration * 1000;
+  if (audio.duration) { $('seek').value = audio.currentTime / audio.duration * 1000; $('seek').style.setProperty('--p', (audio.currentTime / audio.duration * 100) + '%'); }
 };
-audio.onplay = audio.onpause = () => { $('pp').textContent = audio.paused ? '▶' : '⏸'; };
+audio.onplay = audio.onpause = () => { $('pp').innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE; };
 audio.onended = () => {
   const n = nextIdx();
   if (n >= songs.length && !repeat) { idx = -1; audio.removeAttribute('src'); return render(); }

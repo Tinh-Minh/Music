@@ -38,3 +38,24 @@ li button{width:32px;height:32px;font-size:14px;color:var(--muted);border-radius
 li button:hover{background:var(--line)}
 .empty{text-align:center;color:var(--muted);padding:30px 0;font-size:14px}
 #msg{margin-top:14px;text-align:center;font-size:14px;color:var(--accent);min-height:20px}
+
+.ctl button{display:inline-flex;align-items:center;justify-content:center}
+.ctl button svg{display:block}
+.ctl button.opt{color:var(--muted)}
+.ctl button.opt.on{color:var(--accent);background:var(--line)}
+.vol{color:var(--muted)}
+
+/* ---- Kiểu giống Zing MP3 / NCT ---- */
+.ctl{gap:20px}
+.ctl button{width:36px;height:36px;color:var(--fg)}
+.ctl button.opt{color:var(--muted)}
+.ctl button.opt:hover{color:var(--fg)}
+.ctl button.opt.on{color:var(--accent);background:transparent}
+.ctl button.big{background:transparent;border:2px solid var(--fg);color:var(--fg);width:46px;height:46px}
+.ctl button.big:hover{background:transparent;border-color:var(--accent);color:var(--accent)}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--fg) var(--p,0%),var(--line) var(--p,0%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--fg);border:0;opacity:0;transition:opacity .15s}
+input[type=range]:hover::-webkit-slider-thumb,input[type=range]:active::-webkit-slider-thumb{opacity:1}
+input[type=range]::-moz-range-track{background:transparent;height:4px}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--fg);border:0;opacity:0}
+input[type=range]:hover::-moz-range-thumb,input[type=range]:active::-moz-range-thumb{opacity:1}
