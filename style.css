@@ -11,6 +11,8 @@ input[type=text],input[type=email],input[type=url],input[type=password]{font:inh
 input[type=range]{flex:1;accent-color:var(--accent)}
 button{font:inherit;border:0;background:transparent;color:var(--fg);cursor:pointer}
 button.primary{background:var(--accent);color:#fff;padding:12px;border-radius:10px;font-weight:600}
+button.secondary{border:1px solid var(--accent);color:var(--accent);padding:12px;border-radius:10px;font-weight:600}
+button.secondary:hover{background:var(--line)}
 button.link{color:var(--muted);font-size:13px;text-decoration:underline;margin-top:14px;display:block;margin-inline:auto}
 .player{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;position:sticky;top:env(safe-area-inset-top,0);z-index:2}
 .now{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:22px}
