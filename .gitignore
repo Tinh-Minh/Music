@@ -1,3 +1,5 @@
 ANTIGRAVITY_SKILLS.md
 .agent/
 *.log
+node_modules/
+
