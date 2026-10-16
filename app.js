@@ -29,13 +29,13 @@ function getAudioDuration(file) {
 }
 
 const say = t => { $('msg').textContent = t || ''; };
-const show = name => ['login', 'app'].forEach(n => $(n).hidden = n !== name);
 const fmt = t => isFinite(t) ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : '0:00';
 
-/* ---------- Khởi động (không tự phát nhạc) ---------- */
+/* ---------- Khởi động: Vào thẳng app cho khách ---------- */
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) { user = session.user; await enterApp(); } else show('login');
+  user = session?.user || null;
+  await enterApp();
 }
 
 let realtimeSub = null;
@@ -59,38 +59,71 @@ function subscribeSongsRealtime() {
     .subscribe();
 }
 
-/* ---------- Đăng nhập / đăng xuất ---------- */
+/* ---------- Đăng nhập / Đăng xuất Admin ---------- */
+$('adminLoginBtn').onclick = () => $('loginDialog').showModal();
+$('closeLogin').onclick = () => $('loginDialog').close();
+
 $('loginForm').onsubmit = async e => {
   e.preventDefault();
-  say('Đang đăng nhập...');
+  say('Đang xác thực quyền Admin...');
   const { data, error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('pass').value });
   if (error) return say('Sai email hoặc mật khẩu');
-  user = data.user; $('pass').value = ''; say('');
+  
+  user = data.user;
+  $('pass').value = '';
+  say('');
+  $('loginDialog').close();
   await enterApp();
 };
+
 $('logout').onclick = async () => {
-  audio.pause(); audio.removeAttribute('src');
-  if (realtimeSub) { sb.removeChannel(realtimeSub); realtimeSub = null; }
   await sb.auth.signOut();
-  user = null; isAdmin = false; songs = []; idx = -1; show('login');
+  user = null;
+  isAdmin = false;
+  $('who').textContent = '👤 Khách nghe nhạc';
+  $('addBox').hidden = true;
+  $('adminStats').hidden = true;
+  $('logout').hidden = true;
+  $('adminLoginBtn').hidden = false;
+  render();
+  say('Đã đăng xuất tài khoản Admin');
+  setTimeout(() => say(''), 3000);
 };
 
-/* ---------- Danh sách bài ---------- */
+/* ---------- Vào ứng dụng ---------- */
 async function enterApp() {
-  show('app');
-  $('who').textContent = '👤 ' + user.email;
-  const [adminRes] = await Promise.all([
-    sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
-    loadSongs()
-  ]);
-  isAdmin = !!adminRes.data;
+  let adminCheck = null;
+  if (user) {
+    const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    adminCheck = data;
+  }
+  isAdmin = !!adminCheck;
+
   $('addBox').hidden = !isAdmin;
   $('adminStats').hidden = !isAdmin;
-  $('who').textContent = '👤 ' + user.email + (isAdmin ? ' · Admin' : ' · Người nghe');
-  render();
-  if (isAdmin) loadTodayVisits(); else trackUserVisit();
+  $('logout').hidden = !isAdmin;
+  $('adminLoginBtn').hidden = isAdmin;
+
+  if (isAdmin) {
+    $('who').textContent = '👑 Admin: ' + user.email;
+    loadTodayVisits();
+    setTimeout(syncOldSongsDuration, 5000);
+  } else {
+    $('who').textContent = '👤 Khách nghe nhạc';
+    trackUserVisit();
+  }
+
+  await loadSongs();
   subscribeSongsRealtime();
-  if (isAdmin) setTimeout(syncOldSongsDuration, 5000);
+}
+
+function getVisitorId() {
+  let vid = localStorage.getItem('guest_visitor_id');
+  if (!vid) {
+    vid = crypto.randomUUID();
+    localStorage.setItem('guest_visitor_id', vid);
+  }
+  return vid;
 }
 
 function todayVN() {
@@ -100,11 +133,13 @@ function todayVN() {
 }
 
 async function trackUserVisit() {
+  if (isAdmin) return;
   try {
     const today = todayVN();
-    const key = 'last_visit_' + user.id;
+    const vid = getVisitorId();
+    const key = 'last_visit_' + vid;
     if (localStorage.getItem(key) === today) return;
-    const { error } = await sb.from('user_visits').upsert({ user_id: user.id, visit_date: today }, { onConflict: 'user_id,visit_date', ignoreDuplicates: true });
+    const { error } = await sb.from('user_visits').upsert({ user_id: vid, visit_date: today }, { onConflict: 'user_id,visit_date', ignoreDuplicates: true });
     if (!error) localStorage.setItem(key, today);
   } catch (e) {
     console.warn('Lỗi ghi nhận truy cập:', e);
