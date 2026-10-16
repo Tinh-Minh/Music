@@ -40,6 +40,14 @@
     <label class="add" id="addBox">＋ Thêm bài hát (mp3, m4a, wav... tối đa 50MB/file)
       <input type="file" id="file" accept="audio/*" multiple hidden>
     </label>
+    <div id="uploadProgress" class="progress-box" hidden>
+      <div class="progress-text" id="uploadStatus">Đang tải lên...</div>
+      <div class="progress-track"><div class="progress-fill" id="uploadBar"></div></div>
+    </div>
+
+    <div id="adminStats" class="admin-stats" hidden>
+      📊 Lượt truy cập hôm nay (user): <strong id="todayVisitors">0</strong>
+    </div>
 
     <ul id="list"></ul>
     <div class="empty" id="empty">Chưa có bài nào.</div>

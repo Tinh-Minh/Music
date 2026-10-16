@@ -42,10 +42,41 @@ async function enterApp() {
   const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
   isAdmin = !!data;
   $('addBox').hidden = !isAdmin;
+  $('adminStats').hidden = !isAdmin;
   $('who').textContent = '👤 ' + user.email + (isAdmin ? ' · Admin' : ' · Người nghe');
   show('app');
+
+  if (isAdmin) {
+    await loadTodayVisits();
+  } else {
+    await trackUserVisit();
+  }
+
   await loadSongs();
 }
+
+async function trackUserVisit() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = 'last_visit_' + user.id;
+    if (localStorage.getItem(key) === today) return;
+    const { error } = await sb.from('user_visits').upsert({ user_id: user.id, visit_date: today }, { onConflict: 'user_id,visit_date' });
+    if (!error) localStorage.setItem(key, today);
+  } catch (e) {
+    console.warn('Lỗi ghi nhận truy cập:', e);
+  }
+}
+
+async function loadTodayVisits() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { count, error } = await sb.from('user_visits').select('*', { count: 'exact', head: true }).eq('visit_date', today);
+    if (!error && count !== null) $('todayVisitors').textContent = count;
+  } catch (e) {
+    console.warn('Lỗi tải thống kê truy cập:', e);
+  }
+}
+
 async function loadSongs() {
   const { data, error } = await sb.from('songs').select('*').order('created_at', { ascending: true });
   if (error) return say('Không tải được danh sách: ' + error.message);
@@ -68,28 +99,73 @@ function render() {
   $('pp').innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE;
 }
 
+function uploadFileWithProgress(path, file, token, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`);
+    xhr.setRequestHeader('apikey', SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', file.type || 'audio/mpeg');
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error('Lỗi tải lên: ' + xhr.statusText));
+    };
+    xhr.onerror = () => reject(new Error('Lỗi kết nối tải lên'));
+    xhr.send(file);
+  });
+}
+
 /* ---------- Thêm bài ---------- */
 $('file').onchange = async e => {
   if (!isAdmin) return;
   const files = [...e.target.files];
+  if (!files.length) return;
+
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return say('Phiên đăng nhập hết hạn');
+
+  $('uploadProgress').hidden = false;
   const errors = [];
+
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
-    say(`Đang tải ${i + 1}/${files.length}: ${f.name}`);
+    $('uploadStatus').innerHTML = `<span>[${i + 1}/${files.length}] ${f.name}</span> <span id="uploadPct">0%</span>`;
+    $('uploadBar').style.width = '0%';
+
     const ext = (f.name.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, '');
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-    const up = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || 'audio/mpeg' });
-    if (up.error) { errors.push('Tải lên: ' + up.error.message); continue; }
-    const title = f.name.replace(/\.[^.]+$/, '');
-    const ins = await sb.from('songs').insert({ title, file_path: path });
-    if (ins.error) { errors.push('Lưu DB: ' + ins.error.message); await sb.storage.from(BUCKET).remove([path]); }
+
+    try {
+      await uploadFileWithProgress(path, f, token, pct => {
+        $('uploadBar').style.width = pct + '%';
+        const p = $('uploadPct'); if (p) p.textContent = pct + '%';
+      });
+
+      const title = f.name.replace(/\.[^.]+$/, '');
+      const ins = await sb.from('songs').insert({ title, file_path: path });
+      if (ins.error) {
+        errors.push('Lưu DB: ' + ins.error.message);
+        await sb.storage.from(BUCKET).remove([path]);
+      }
+    } catch (err) {
+      errors.push(err.message || 'Lỗi tải file');
+    }
   }
+
+  $('uploadProgress').hidden = true;
   e.target.value = '';
   const curId = idx >= 0 ? songs[idx]?.id : null;
   await loadSongs();
   if (curId) idx = songs.findIndex(s => s.id === curId);
   render();
-  say(errors.length ? '❌ ' + errors[0] : '✅ Đã tải xong');
+  say(errors.length ? '❌ ' + errors[0] : '✅ Đã tải xong ' + files.length + ' bài');
 };
 
 /* ---------- Xóa bài ---------- */
