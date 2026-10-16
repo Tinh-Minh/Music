@@ -2,7 +2,6 @@ const $ = id => document.getElementById(id);
 const BUCKET = 'music';
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
-const ICON_LOADING = '<svg class="spin" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>';
 
 /* Publishable key được thiết kế để công khai. Bảo mật nằm ở RLS + đăng nhập. */
 const SUPABASE_URL = 'https://qkzeyhvfokiyxoyjeqij.supabase.co';
@@ -10,12 +9,8 @@ const SUPABASE_KEY = 'sb_publishable_LedPdzZbijxM2LuXpfTw9w_KFBh1Qvj';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let user = null, isAdmin = false, songs = [], idx = -1, shuffle = false, repeat = false, activeTab = 'all';
-const urlCache = new Map();
 const audio = new Audio();
-audio.preload = 'auto';
 audio.volume = 0.8;
-const prefetchAudio = new Audio();
-prefetchAudio.preload = 'auto';
 
 function getAudioDuration(file) {
   return new Promise(resolve => {
@@ -50,6 +45,7 @@ function subscribeSongsRealtime() {
   realtimeSub = sb
     .channel('realtime:songs')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'songs' }, async payload => {
+      if (payload.eventType === 'UPDATE') return;
       const curId = idx >= 0 && songs[idx] ? songs[idx].id : null;
       await loadSongs(false);
       if (curId) idx = songs.findIndex(s => s.id === curId);
@@ -81,29 +77,34 @@ $('logout').onclick = async () => {
 
 /* ---------- Danh sách bài ---------- */
 async function enterApp() {
-  const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
-  isAdmin = !!data;
+  show('app');
+  $('who').textContent = '👤 ' + user.email;
+  const [adminRes] = await Promise.all([
+    sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
+    loadSongs()
+  ]);
+  isAdmin = !!adminRes.data;
   $('addBox').hidden = !isAdmin;
   $('adminStats').hidden = !isAdmin;
   $('who').textContent = '👤 ' + user.email + (isAdmin ? ' · Admin' : ' · Người nghe');
-  show('app');
-
-  if (isAdmin) {
-    await loadTodayVisits();
-  } else {
-    await trackUserVisit();
-  }
-
-  await loadSongs();
+  render();
+  if (isAdmin) loadTodayVisits(); else trackUserVisit();
   subscribeSongsRealtime();
+  if (isAdmin) setTimeout(syncOldSongsDuration, 5000);
+}
+
+function todayVN() {
+  const d = new Date();
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+  return new Date(utc + 7 * 3600000).toISOString().slice(0, 10);
 }
 
 async function trackUserVisit() {
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayVN();
     const key = 'last_visit_' + user.id;
     if (localStorage.getItem(key) === today) return;
-    const { error } = await sb.from('user_visits').upsert({ user_id: user.id, visit_date: today }, { onConflict: 'user_id,visit_date' });
+    const { error } = await sb.from('user_visits').upsert({ user_id: user.id, visit_date: today }, { onConflict: 'user_id,visit_date', ignoreDuplicates: true });
     if (!error) localStorage.setItem(key, today);
   } catch (e) {
     console.warn('Lỗi ghi nhận truy cập:', e);
@@ -112,7 +113,7 @@ async function trackUserVisit() {
 
 async function loadTodayVisits() {
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayVN();
     const { count, error } = await sb.from('user_visits').select('*', { count: 'exact', head: true }).eq('visit_date', today);
     if (!error && count !== null) $('todayVisitors').textContent = count;
   } catch (e) {
@@ -120,26 +121,30 @@ async function loadTodayVisits() {
   }
 }
 
-async function loadSongs(shouldSync = true) {
+async function loadSongs() {
   const { data, error } = await sb.from('songs').select('*').order('created_at', { ascending: true });
   if (error) return say('Không tải được danh sách: ' + error.message);
   songs = data; render();
-  if (shouldSync) syncOldSongsDuration();
 }
 
+const triedDur = new Set();
 async function syncOldSongsDuration() {
-  const pending = songs.filter(s => !s.duration);
-  if (!pending.length) return;
-
+  if (!isAdmin) return;
+  const pending = songs.filter(s => s.duration == null && !triedDur.has(s.id));
   for (const s of pending) {
+    triedDur.add(s.id);
     try {
       const { data } = await sb.storage.from(BUCKET).createSignedUrl(s.file_path, 300);
       if (!data?.signedUrl) continue;
       const dur = await new Promise(resolve => {
-        const temp = new Audio();
-        temp.src = data.signedUrl;
-        temp.onloadedmetadata = () => resolve(Math.round(temp.duration) || 0);
-        temp.onerror = () => resolve(0);
+        const t = new Audio();
+        let finished = false;
+        const done = v => { if (finished) return; finished = true; t.removeAttribute('src'); resolve(v); };
+        t.preload = 'metadata';
+        t.onloadedmetadata = () => done(Math.round(t.duration) || 0);
+        t.onerror = () => done(0);
+        setTimeout(() => done(0), 8000);
+        t.src = data.signedUrl;
       });
       if (dur > 0) {
         s.duration = dur;
@@ -153,14 +158,14 @@ async function syncOldSongsDuration() {
 }
 
 function getFilteredSongs() {
-  if (activeTab === 'short') return songs.filter(s => (s.duration || 0) > 0 && s.duration < 300);
-  if (activeTab === 'long') return songs.filter(s => (s.duration || 0) >= 300);
+  if (activeTab === 'short') return songs.filter(s => (s.duration || 0) > 0 && s.duration < 600);
+  if (activeTab === 'long') return songs.filter(s => (s.duration || 0) >= 600);
   return songs;
 }
 
 function updateTabCounts() {
-  const shortCount = songs.filter(s => (s.duration || 0) > 0 && s.duration < 300).length;
-  const longCount = songs.filter(s => (s.duration || 0) >= 300).length;
+  const shortCount = songs.filter(s => (s.duration || 0) > 0 && s.duration < 600).length;
+  const longCount = songs.filter(s => (s.duration || 0) >= 600).length;
   if ($('countAll')) $('countAll').textContent = songs.length;
   if ($('countShort')) $('countShort').textContent = shortCount;
   if ($('countLong')) $('countLong').textContent = longCount;
@@ -290,60 +295,22 @@ async function removeSong(i) {
   songs.splice(i, 1); render();
 }
 
-/* ---------- Phát nhạc (có cache URL & prefetch bài tiếp) ---------- */
-async function getSongUrl(song) {
-  if (!song) return null;
-  const now = Date.now();
-  const cached = urlCache.get(song.id);
-  if (cached && cached.expiresAt > now + 60000) return cached.url;
-
-  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(song.file_path, 3600);
-  if (error || !data?.signedUrl) return null;
-  urlCache.set(song.id, { url: data.signedUrl, expiresAt: now + 3500 * 1000 });
-  return data.signedUrl;
-}
-
-function prefetchNextSong() {
-  const next = nextIdx();
-  if (next < songs.length && songs[next]) {
-    getSongUrl(songs[next]).then(url => {
-      if (url && prefetchAudio.src !== url) prefetchAudio.src = url;
-    });
-  }
-}
-
+/* ---------- Phát nhạc (link tạm thời, hết hạn sau 1 giờ) ---------- */
 async function play(i) {
   if (!songs.length) return;
   idx = (i + songs.length) % songs.length;
   render();
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(songs[idx].file_path, 3600);
+  if (error) return say('Không phát được: ' + error.message);
+  audio.src = data.signedUrl;
+  audio.play().catch(() => {});
 
-  $('pp').innerHTML = ICON_LOADING;
-  say('⏳ Đang tải bài...');
-
-  const currentSong = songs[idx];
-  const url = await getSongUrl(currentSong);
-  if (!url) {
-    say('Không lấy được link phát nhạc');
-    $('pp').innerHTML = ICON_PLAY;
-    return;
-  }
-
-  if (audio.src !== url) {
-    audio.src = url;
-  }
-  audio.play().then(() => {
-    say('');
-    prefetchNextSong();
-  }).catch(() => {
-    say('');
-  });
-
-  if (!currentSong.duration) {
+  if (!songs[idx].duration && isAdmin) {
     audio.onloadedmetadata = async () => {
       const dur = Math.round(audio.duration) || 0;
-      if (dur > 0 && songs[idx] && songs[idx].id === currentSong.id) {
+      if (dur > 0 && songs[idx]) {
         songs[idx].duration = dur;
-        await sb.from('songs').update({ duration: dur }).eq('id', currentSong.id);
+        await sb.from('songs').update({ duration: dur }).eq('id', songs[idx].id);
         render();
       }
     };
@@ -368,9 +335,6 @@ audio.ontimeupdate = () => {
   $('dur').textContent = fmt(audio.duration);
   if (audio.duration) { $('seek').value = audio.currentTime / audio.duration * 1000; $('seek').style.setProperty('--p', (audio.currentTime / audio.duration * 100) + '%'); }
 };
-
-audio.onwaiting = () => { $('pp').innerHTML = ICON_LOADING; };
-audio.onplaying = () => { $('pp').innerHTML = ICON_PAUSE; };
 audio.onplay = audio.onpause = () => { $('pp').innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE; };
 audio.onended = () => {
   const n = nextIdx();
