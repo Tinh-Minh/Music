@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Nhạc của tôi</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <main>
@@ -23,41 +23,54 @@
 
   <!-- App -->
   <section id="app" hidden>
-    <div class="who" id="who"></div>
-    <div class="player">
-      <div class="now" id="now">Chưa chọn bài</div>
-      <div class="bar"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0"><span id="dur">0:00</span></div>
-      <div class="ctl">
-        <button id="shuf" class="opt" title="Phát ngẫu nhiên"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
-        <button id="prev" title="Bài trước"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
-        <button id="pp" class="big" title="Phát/Dừng"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-        <button id="next" title="Bài sau"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
-        <button id="rep" class="opt" title="Lặp lại"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
-      </div>
-      <div class="vol"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg><input type="range" id="vol" min="0" max="100" value="80" style="--p:80%"></div>
-    </div>
+    <div class="app-layout">
+      <!-- Cột trái: Trình phát nhạc & Quản lý -->
+      <aside class="app-sidebar">
+        <div class="who" id="who"></div>
+        <div class="player">
+          <div class="now" id="now">Chưa chọn bài</div>
+          <div class="bar"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0"><span id="dur">0:00</span></div>
+          <div class="ctl">
+            <button id="shuf" class="opt" title="Phát ngẫu nhiên"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
+            <button id="prev" title="Bài trước"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+            <button id="pp" class="big" title="Phát/Dừng"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button id="next" title="Bài sau"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+            <button id="rep" class="opt" title="Lặp lại"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
+          </div>
+          <div class="vol"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg><input type="range" id="vol" min="0" max="100" value="80" style="--p:80%"></div>
+        </div>
 
-    <label class="add" id="addBox">＋ Thêm bài hát (mp3, m4a, wav... tối đa 50MB/file)
-      <input type="file" id="file" accept="audio/*" multiple hidden>
-    </label>
-    <div id="uploadProgress" class="progress-box" hidden>
-      <div class="progress-text" id="uploadStatus">Đang tải lên...</div>
-      <div class="progress-track"><div class="progress-fill" id="uploadBar"></div></div>
-    </div>
+        <label class="add" id="addBox">＋ Thêm bài hát (mp3, m4a...)
+          <input type="file" id="file" accept="audio/*" multiple hidden>
+        </label>
+        <div id="uploadProgress" class="progress-box" hidden>
+          <div class="progress-text" id="uploadStatus">Đang tải lên...</div>
+          <div class="progress-track"><div class="progress-fill" id="uploadBar"></div></div>
+        </div>
 
-    <div id="adminStats" class="admin-stats" hidden>
-      📊 Lượt truy cập hôm nay (user): <strong id="todayVisitors">0</strong>
-    </div>
+        <div id="adminStats" class="admin-stats" hidden>
+          📊 Hôm nay (user): <strong id="todayVisitors">0</strong>
+        </div>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="all">Tất cả (<span id="countAll">0</span>)</button>
-      <button class="tab-btn" data-tab="short">Bài hát ngắn (<span id="countShort">0</span>)</button>
-      <button class="tab-btn" data-tab="long">Bài hát dài (<span id="countLong">0</span>)</button>
-    </div>
+        <button class="link" id="logout">Đăng xuất</button>
+      </aside>
 
-    <ul id="list"></ul>
-    <div class="empty" id="empty">Chưa có bài nào.</div>
-    <button class="link" id="logout">Đăng xuất</button>
+      <!-- Cột phải: Tabs & Bảng danh sách bài hát -->
+      <section class="app-content">
+        <div class="content-header">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="all">Tất cả (<span id="countAll">0</span>)</button>
+            <button class="tab-btn" data-tab="short">Bài hát ngắn (<span id="countShort">0</span>)</button>
+            <button class="tab-btn" data-tab="long">Bài hát dài (<span id="countLong">0</span>)</button>
+          </div>
+        </div>
+
+        <div class="list-container">
+          <ul id="list"></ul>
+          <div class="empty" id="empty">Chưa có bài nào.</div>
+        </div>
+      </section>
+    </div>
   </section>
 
   <div id="msg" role="status"></div>
