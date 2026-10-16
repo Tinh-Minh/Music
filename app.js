@@ -31,8 +31,30 @@ function getAudioDuration(file) {
 const say = t => { $('msg').textContent = t || ''; };
 const fmt = t => isFinite(t) ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : '0:00';
 
+/* ---------- Chuyển đổi giao diện Sáng / Tối ---------- */
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const current = saved || (prefersDark ? 'dark' : 'light');
+  applyTheme(current);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const isDark = theme === 'dark';
+  $('themeIconSun').hidden = !isDark;
+  $('themeIconMoon').hidden = isDark;
+}
+
+$('themeToggle').onclick = () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  applyTheme(isDark ? 'light' : 'dark');
+};
+
 /* ---------- Khởi động: Vào thẳng app cho khách ---------- */
 async function init() {
+  initTheme();
   const { data: { session } } = await sb.auth.getSession();
   user = session?.user || null;
   await enterApp();
