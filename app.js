@@ -55,6 +55,10 @@ $('themeToggle').onclick = () => {
 /* ---------- Khởi động: Vào thẳng app cho khách ---------- */
 async function init() {
   initTheme();
+  if (window.Capacitor) {
+    const apkBtn = $('apkDownload');
+    if (apkBtn) apkBtn.hidden = true;
+  }
   const { data: { session } } = await sb.auth.getSession();
   user = session?.user || null;
   await enterApp();
