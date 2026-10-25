@@ -2,7 +2,6 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch:
 
@@ -25,9 +24,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install dependencies & sync Capacitor
         run: |
           npm ci
@@ -36,6 +32,7 @@ jobs:
       - name: Build Debug APK
         working-directory: ./android
         run: |
+          sed -i 's/\r$//' gradlew
           chmod +x gradlew
           ./gradlew assembleDebug
 
