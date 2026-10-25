@@ -1,28 +1,48 @@
-const $ = id => document.getElementById(id);
-const SUPABASE_URL = 'https://qkzeyhvfokiyxoyjeqij.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_LedPdzZbijxM2LuXpfTw9w_KFBh1Qvj';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+import { $, sb, say } from './js/config.js';
+import { initTheme } from './js/theme.js';
 
-const say = t => { $('msg').textContent = t || ''; };
-const home = location.origin + location.pathname.replace(/register\.html$/, '');
+initTheme();
 
-$('regForm').onsubmit = async e => {
-  e.preventDefault();
-  const email = $('email').value.trim();
-  const password = $('pass').value;
-  if (password.length < 6) return say('Mật khẩu tối thiểu 6 ký tự');
-  if (password !== $('pass2').value) return say('Hai mật khẩu không khớp');
+const form = $('registerForm');
+if (form) {
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const email = $('regEmail').value.trim();
+    const password = $('regPass').value;
+    const confirmPass = $('regPassConfirm').value;
 
-  $('btn').disabled = true;
-  say('Đang đăng ký...');
-  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: home } });
-  $('btn').disabled = false;
+    if (password !== confirmPass) {
+      return say('❌ Mật khẩu nhập lại không khớp!');
+    }
 
-  if (error) return say('Lỗi đăng ký: ' + error.message);
-  // Email đã tồn tại: Supabase trả về user nhưng không có identities
-  if (data.user && data.user.identities && data.user.identities.length === 0) return say('Email này đã được đăng ký. Hãy quay lại đăng nhập.');
-  // Không cần xác nhận email: vào app luôn
-  if (data.session) { location.href = home; return; }
-  $('regForm').hidden = true;
-  say('✅ Đã đăng ký. Kiểm tra email và bấm link xác nhận, rồi quay lại đăng nhập.');
-};
+    const btn = $('regSubmitBtn');
+    if (btn) btn.disabled = true;
+    say('⏳ Đang tạo tài khoản...');
+
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (btn) btn.disabled = false;
+
+    if (error) {
+      return say('❌ Lỗi đăng ký: ' + error.message);
+    }
+
+    // Đồng bộ Yêu thích & Playlist hiện có trên máy lên tài khoản vừa tạo
+    if (data?.user) {
+      try {
+        const favs = JSON.parse(localStorage.getItem('nhac_favorites') || '[]');
+        const pls = JSON.parse(localStorage.getItem('nhac_playlists') || '[]');
+        await sb.from('user_preferences').upsert({
+          user_id: data.user.id,
+          favorites: favs,
+          playlists: pls,
+          updated_at: new Date().toISOString()
+        });
+      } catch (_) {}
+    }
+
+    say('✅ Đăng ký thành công! Đang chuyển về trang nghe nhạc...');
+    setTimeout(() => {
+      location.href = 'index.html';
+    }, 1200);
+  };
+}

@@ -3,9 +3,21 @@
   "version": "1.0.0",
   "description": "Nhac cua toi - Music Player",
   "scripts": {
-    "dev": "npx serve -l 3000 ."
+    "dev": "npx serve -l 3000 .",
+    "web:copy": "node scripts/copy-web.js",
+    "cap:sync": "npm run web:copy && npx cap sync android",
+    "apk:debug": "npm run cap:sync && node scripts/build-apk.js",
+    "apk:release": "npm run cap:sync && node scripts/build-apk.js --release",
+    "aab:release": "npm run cap:sync && node scripts/build-apk.js --bundle"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
 }

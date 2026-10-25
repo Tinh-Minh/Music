@@ -1,0 +1,15 @@
+{
+  "name": "Nhạc của tôi",
+  "short_name": "Nhạc",
+  "description": "Nghe nhạc trực tuyến",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141214",
+  "theme_color": "#e8506a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

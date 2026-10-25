@@ -5,34 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Nhạc của tôi</title>
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8506a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nhạc">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 <main>
   <header class="app-header">
-    <h1>🎧 Nhạc của tôi</h1>
+    <h1 id="appTitleText">🎧 Nhạc của tôi</h1>
     <div class="header-actions">
+      <button id="langToggle" class="icon-btn" title="Đổi ngôn ngữ VI / EN">VI</button>
+      <button id="notifyToggle" class="icon-btn" title="Bật thông báo khi có bài mới" aria-label="Thông báo">🔔</button>
       <button id="themeToggle" class="icon-btn" title="Chuyển chế độ sáng / tối" aria-label="Đổi theme">
         <svg id="themeIconSun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="themeIconMoon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
       <a id="apkDownload" class="apk-download-btn" href="downloads/NhacCuaToi.apk" download="NhacCuaToi.apk">Tải app Android</a>
-      <button id="adminLoginBtn" class="admin-login-btn">🔐 Đăng nhập Admin</button>
+      <button id="iosInstall" class="apk-download-btn" hidden>📲 Cài app iPhone</button>
+      <button id="adminLoginBtn" class="admin-login-btn">🔐 Đăng nhập</button>
     </div>
   </header>
 
-  <!-- Modal đăng nhập Admin -->
+  <!-- Hướng dẫn cài app trên iPhone -->
+  <dialog id="iosDialog" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Cài app trên iPhone</h3>
+        <button id="closeIos" class="close-btn">&times;</button>
+      </div>
+      <ol class="ios-steps">
+        <li>Mở trang này bằng <b>Safari</b> (không dùng Chrome).</li>
+        <li>Bấm nút <b>Chia sẻ</b> <span aria-hidden="true">⬆️</span> ở thanh dưới.</li>
+        <li>Chọn <b>Thêm vào MH chính</b> rồi bấm <b>Thêm</b>.</li>
+      </ol>
+      <p class="sub">Icon "Nhạc" sẽ xuất hiện trên màn hình chính, mở ra chạy toàn màn hình như app thật.</p>
+    </div>
+  </dialog>
+
+  <!-- Modal đăng nhập Admin / Thành viên -->
   <dialog id="loginDialog" class="modal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Đăng nhập Quản trị viên</h3>
+        <h3 id="loginModalTitle">🔐 Đăng nhập Tài khoản</h3>
         <button id="closeLogin" class="close-btn">&times;</button>
       </div>
       <form id="loginForm">
-        <input id="email" type="email" placeholder="Email admin" required autocomplete="username">
-        <input id="pass" type="password" placeholder="Mật khẩu" required autocomplete="current-password">
-        <button class="primary" type="submit">Đăng nhập</button>
+        <input id="email" type="email" placeholder="Email đăng nhập" required autocomplete="username">
+        <input id="pass" type="password" placeholder="Mật khẩu" required minlength="6" autocomplete="current-password">
+        <button id="loginSubmitBtn" class="primary" type="submit">Đăng nhập</button>
       </form>
+      <a href="register.html" class="link">Chưa có tài khoản? Mở trang Đăng ký riêng →</a>
+    </div>
+  </dialog>
+
+  <!-- Modal chỉnh sửa thông tin bài hát (Admin) -->
+  <dialog id="editSongDialog" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✏️ Chỉnh sửa bài hát</h3>
+        <button id="closeEditSong" class="close-btn">&times;</button>
+      </div>
+      <form id="editSongForm">
+        <input id="editTitle" type="text" placeholder="Tên bài hát" required>
+        <input id="editArtist" type="text" placeholder="Nghệ sĩ / Ca sĩ">
+        <input id="editGenre" type="text" placeholder="Thể loại (VD: Lofi, Remix, Ballad...)">
+        <input id="editCoverUrl" type="url" placeholder="Link ảnh bìa (hoặc tải ảnh bên dưới)">
+        <label class="file-label">🖼️ Tải ảnh bìa mới:
+          <input id="editCoverFile" type="file" accept="image/*">
+        </label>
+        <textarea id="editLyrics" rows="5" placeholder="Lời bài hát (hỗ trợ định dạng [00:15] Lời bài hát...)"></textarea>
+        <button class="primary" type="submit">Lưu thay đổi</button>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal Dashboard Thống kê (Admin) -->
+  <dialog id="dashboardDialog" class="modal modal-wide">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📊 Thống kê chi tiết</h3>
+        <button id="closeDashboard" class="close-btn">&times;</button>
+      </div>
+      <h4 class="dash-sub">Lượt truy cập 7 ngày qua</h4>
+      <div id="visitsChart" class="chart-box"></div>
+      <h4 class="dash-sub">🔥 Top bài hát nghe nhiều nhất</h4>
+      <ul id="topSongsList" class="top-list"></ul>
     </div>
   </dialog>
 
@@ -43,45 +105,105 @@
       <aside class="app-sidebar">
         <div class="who" id="who"></div>
         <div class="player">
-          <div class="now" id="now">Chưa chọn bài</div>
+          <div class="now-wrap">
+            <img id="playerCover" class="player-cover" src="" alt="" hidden>
+            <div class="now" id="now">Chưa chọn bài</div>
+          </div>
           <div class="bar"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0"><span id="dur">0:00</span></div>
           <div class="ctl">
-            <button id="shuf" class="opt" title="Phát ngẫu nhiên"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
-            <button id="prev" title="Bài trước"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
-            <button id="pp" class="big" title="Phát/Dừng"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-            <button id="next" title="Bài sau"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
-            <button id="rep" class="opt" title="Lặp lại"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
+            <button id="shuf" class="opt" title="Phát ngẫu nhiên (Shuffle)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
+            <button id="prev" title="Bài trước (←)"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+            <button id="pp" class="big" title="Phát/Dừng (Space)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button id="next" title="Bài sau (→)"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+            <button id="rep" class="opt" title="Lặp lại (Repeat)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
           </div>
           <div class="vol"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg><input type="range" id="vol" min="0" max="100" value="80" style="--p:80%"></div>
+
+          <!-- Tốc độ phát, Hẹn giờ tắt nhạc & Nút Lời bài hát -->
+          <div class="player-extras">
+            <select id="speedSelect" class="mini-select" title="Tốc độ phát">
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2.0x</option>
+            </select>
+            <select id="sleepSelect" class="mini-select" title="Hẹn giờ tắt nhạc">
+              <option value="0">⏰ Hẹn giờ: Tắt</option>
+              <option value="15">⏰ 15 phút</option>
+              <option value="30">⏰ 30 phút</option>
+              <option value="60">⏰ 60 phút</option>
+            </select>
+            <span id="sleepCountdown" class="sleep-badge" hidden></span>
+            <button id="toggleLyricsBtn" class="mini-btn" title="Xem lời bài hát">🎤 Lyrics</button>
+            <button id="bgKeepAliveBtn" class="mini-btn" title="Giữ nhạc phát kể cả khi vuốt xóa đa nhiệm (Android App)">🔒 Giữ nền: Tắt</button>
+          </div>
+
+          <!-- Khung hiển thị Lời bài hát -->
+          <div id="lyricsPanel" class="lyrics-panel" hidden>
+            <div id="lyricsContent" class="lyrics-content"></div>
+          </div>
         </div>
 
-        <label class="add" id="addBox">＋ Thêm bài hát (mp3, m4a...)
+        <!-- Hàng đợi phát tiếp theo -->
+        <div id="queueBox" class="queue-box" hidden>
+          <div class="queue-header">📜 Hàng đợi phát tiếp</div>
+          <ul id="queueList" class="queue-list"></ul>
+        </div>
+
+        <label class="add" id="addBox" hidden>
+          <span id="addBoxText">＋ Kéo thả hoặc chọn file nhạc (mp3, m4a, wav... tối đa 50MB)</span>
           <input type="file" id="file" accept="audio/*" multiple hidden>
         </label>
         <div id="uploadProgress" class="progress-box" hidden>
           <div class="progress-text" id="uploadStatus">Đang tải lên...</div>
           <div class="progress-track"><div class="progress-fill" id="uploadBar"></div></div>
+          <button id="cancelUploadBtn" class="cancel-upload-btn" type="button">⏹️ Hủy tải lên</button>
         </div>
 
         <div id="adminStats" class="admin-stats" hidden>
-          📊 Hôm nay (user): <strong id="todayVisitors">0</strong>
+          <span>📊 Hôm nay (user): <strong id="todayVisitors">0</strong></span>
+          <button id="openDashboardBtn" class="mini-btn" type="button">Chi tiết 📈</button>
         </div>
 
-        <button class="link" id="logout" hidden>Đăng xuất Admin</button>
+        <div id="adminBulkBar" class="admin-stats" hidden>
+          <span>Đã chọn: <strong id="bulkSelectedCount">0</strong> bài</span>
+          <div style="display:flex;gap:6px">
+            <button id="bulkDeleteBtn" class="mini-btn danger-btn" type="button">🗑️ Xóa mục chọn</button>
+            <button id="bulkClearBtn" class="mini-btn" type="button">Bỏ chọn</button>
+          </div>
+        </div>
+
+        <button class="link" id="logout" hidden>Đăng xuất</button>
       </aside>
 
-      <!-- Cột phải: Tabs & Bảng danh sách bài hát -->
+      <!-- Cột phải: Tìm kiếm, Bộ lọc, Tabs & Bảng danh sách bài hát -->
       <section class="app-content">
         <div class="content-header">
+          <div class="filter-bar">
+            <input id="searchInput" type="search" placeholder="🔍 Tìm tên bài, nghệ sĩ, thể loại...">
+            <select id="genreFilter" class="mini-select">
+              <option value="">Tất cả thể loại</option>
+            </select>
+            <select id="playlistSelect" class="mini-select">
+              <option value="">📁 Playlist cá nhân</option>
+            </select>
+            <button id="newPlaylistBtn" class="mini-btn" type="button">+ Tạo Playlist</button>
+            <button id="deletePlaylistBtn" class="mini-btn danger-btn" type="button" hidden>🗑️ Xóa PL</button>
+          </div>
+
           <div class="tabs">
-            <button class="tab-btn active" data-tab="all">Tất cả (<span id="countAll">0</span>)</button>
-            <button class="tab-btn" data-tab="short">Bài hát ngắn (<span id="countShort">0</span>)</button>
-            <button class="tab-btn" data-tab="long">Bài hát dài (<span id="countLong">0</span>)</button>
+            <button class="tab-btn active" data-tab="all"><span id="lblTabAll">Tất cả</span> (<span id="countAll">0</span>)</button>
+            <button class="tab-btn" data-tab="short"><span id="lblTabShort">Ngắn &lt;10p</span> (<span id="countShort">0</span>)</button>
+            <button class="tab-btn" data-tab="long"><span id="lblTabLong">Dài ≥10p</span> (<span id="countLong">0</span>)</button>
+            <button class="tab-btn" data-tab="fav"><span id="lblTabFav">❤️ Yêu thích</span> (<span id="countFav">0</span>)</button>
+            <button class="tab-btn" data-tab="offline"><span id="lblTabOffline">📥 Đã tải</span> (<span id="countOffline">0</span>)</button>
           </div>
         </div>
 
         <div class="list-container">
           <ul id="list"></ul>
+          <button id="loadMoreBtn" class="secondary load-more-btn" type="button" hidden>Xem thêm</button>
           <div class="empty" id="empty">Chưa có bài nào.</div>
         </div>
       </section>
@@ -92,6 +214,6 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="app.js?v=9"></script>
+<script type="module" src="app.js?v=11"></script>
 </body>
 </html>

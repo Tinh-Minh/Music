@@ -1,0 +1,16 @@
+{
+  "appId": "com.nhaccuatoi.music",
+  "appName": "Nhạc của tôi",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "url": "https://tinh-minh.github.io/Music/",
+    "allowNavigation": [
+      "*.supabase.co",
+      "cdn.jsdelivr.net"
+    ]
+  }
+}
+

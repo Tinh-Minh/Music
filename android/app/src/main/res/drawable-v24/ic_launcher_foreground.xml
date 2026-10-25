@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Nốt nhạc đôi (beamed notes) màu trắng -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M46,36 L74,29 L74,64 L70,64 L70,38 L50,43 L50,70 L46,70 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M33.5,70 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M57.5,64 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" />
+</vector>

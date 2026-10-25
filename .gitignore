@@ -2,4 +2,10 @@ ANTIGRAVITY_SKILLS.md
 .agent/
 *.log
 node_modules/
-
+www/
+dist/
+android/local.properties
+.idea/
+.aider*
+*.jks
+*.keystore
