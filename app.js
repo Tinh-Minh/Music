@@ -130,12 +130,11 @@ async function init() {
   const isStandalone =
     window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 
-  if (window.Capacitor || isIOS || isStandalone) {
-    const apkBtn = $('apkDownload');
-    if (apkBtn) apkBtn.hidden = true;
-  }
-  if (isIOS && !isStandalone && !window.Capacitor) {
-    if ($('iosInstall')) $('iosInstall').hidden = false;
+  if (window.Capacitor || isStandalone) {
+    if ($('apkDownload')) $('apkDownload').hidden = true;
+    if ($('iosInstall')) $('iosInstall').hidden = true;
+  } else if (isIOS) {
+    if ($('apkDownload')) $('apkDownload').hidden = true;
   }
   if ($('iosInstall')) $('iosInstall').onclick = () => $('iosDialog').showModal();
   if ($('closeIos')) $('closeIos').onclick = () => $('iosDialog').close();

@@ -3,8 +3,8 @@ import { $, state } from './config.js';
 const dict = {
   vi: {
     appTitle: '🎧 Nhạc của tôi',
-    iosInstall: '📲 Cài app iPhone',
-    apkDownload: 'Tải app Android',
+    iosInstall: '🍎 Tải iPhone',
+    apkDownload: '🤖 Tải Android',
     loginBtn: '🔐 Đăng nhập',
     logoutBtn: 'Đăng xuất',
     guestLabel: '👤 Khách nghe nhạc',
@@ -30,8 +30,8 @@ const dict = {
   },
   en: {
     appTitle: '🎧 My Music',
-    iosInstall: '📲 Install on iPhone',
-    apkDownload: 'Android APK',
+    iosInstall: '🍎 iPhone App',
+    apkDownload: '🤖 Android App',
     loginBtn: '🔐 Sign In',
     logoutBtn: 'Sign Out',
     guestLabel: '👤 Guest Listener',

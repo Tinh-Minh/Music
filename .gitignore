@@ -4,8 +4,13 @@ ANTIGRAVITY_SKILLS.md
 node_modules/
 www/
 dist/
-android/local.properties
+android/
+.github/
+package-lock.json
 .idea/
+.vscode/
+.DS_Store
+Thumbs.db
 .aider*
 *.jks
 *.keystore
